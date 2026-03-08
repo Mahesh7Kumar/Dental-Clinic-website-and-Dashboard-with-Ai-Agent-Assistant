@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { ArrowLeft, ArrowRight, BadgeCheck, Stethoscope, HeartHandshake } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import client1 from '../../assets/ellipse1.png';
-import client2 from '../../assets/ellipse2.png';
-import client3 from '../../assets/ellipse3.png';
-import client4 from '../../assets/ellipse4.png';
-import client5 from '../../assets/ellipse5.png';
+import client1 from '../../assets/Ellipse1.png';
+import client2 from '../../assets/Ellipse2.png';
+import client3 from '../../assets/Ellipse3.png';
+import client4 from '../../assets/Ellipse4.png';
+import client5 from '../../assets/Ellipse5.png';
 
 export default function Services() {
   const [planType, setPlanType] = useState('monthly');
