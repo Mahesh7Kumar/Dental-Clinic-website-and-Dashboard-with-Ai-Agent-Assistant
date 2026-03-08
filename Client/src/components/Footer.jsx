@@ -1,4 +1,4 @@
-import Doctoranime from '../assets/doctoranime.png'
+import Doctoranime from '../assets/Doctoranime.png'
 import { Mail, Phone, Facebook, Instagram, Twitter } from 'lucide-react';
 import React, { useState } from 'react';
 import BookAppointmentModal from './BookAppointmentModal';

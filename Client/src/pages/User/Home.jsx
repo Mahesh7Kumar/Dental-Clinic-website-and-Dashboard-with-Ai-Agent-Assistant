@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, CircleX } from 'lucide-react';
 import DoctorImage from '../../assets/image.png'
-import Heart from '../../assets/heart.png'
+import Heart from '../../assets/Heart.png'
 import tablet from '../../assets/tablet.png'
 import Metical from '../../assets/metical.png'
 import hospital from '../../assets/hospital.png'
@@ -10,7 +10,7 @@ import text from '../../assets/text.png'
 import equipment1 from '../../assets/equipment1.png'
 import equipment2 from '../../assets/equipment2.png'
 import equipment3 from '../../assets/equipment3.png'
-import File from '../../assets/file.png'
+import File from '../../assets/File.png'
 import { Button } from "../../components/ui/button";
 import api from "../../utils/api.js";
 import { Spinner } from "../../components/ui/spinner.tsx";
