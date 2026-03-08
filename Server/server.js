@@ -28,7 +28,7 @@ import leadRoutes from "./routes/leadRoutes.js";
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174", // your phone/tablet
-  process.env.VITE_CLIENT_URL, // production URL from .env
+  "https://demodental-care.vercel.app",// production URL from .env
   // add more if needed
 ];
 
