@@ -28,6 +28,7 @@ import leadRoutes from "./routes/leadRoutes.js";
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174", // your phone/tablet
+  "https://dental-clinic-website-and-dashboard.vercel.app",
   // add more if needed
 ];
 
