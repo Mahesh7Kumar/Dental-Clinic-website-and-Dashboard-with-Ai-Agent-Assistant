@@ -15,7 +15,7 @@ const N8nChat = () => {
   const messagesEndRef = useRef(null);
 
   // ⚠️ REPLACE WITH YOUR ACTUAL WEBHOOK URL
-  const WEBHOOK_URL = 'http://localhost:5678/webhook-test/doctor-chat';
+  const WEBHOOK_URL = "https://ai-agent-builder-0ekl.onrender.com/webhook/doctor-chat";
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -118,20 +118,18 @@ const N8nChat = () => {
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-3 sm:px-4 py-2 sm:py-3 ${
-                msg.role === 'user'
+              className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-3 sm:px-4 py-2 sm:py-3 ${msg.role === 'user'
                   ? 'bg-indigo-600 text-white rounded-br-sm'
                   : msg.error
-                  ? 'bg-red-100 text-red-800 border border-red-300 rounded-bl-sm'
-                  : 'bg-white text-gray-800 border border-gray-200 shadow-sm rounded-bl-sm'
-              }`}
+                    ? 'bg-red-100 text-red-800 border border-red-300 rounded-bl-sm'
+                    : 'bg-white text-gray-800 border border-gray-200 shadow-sm rounded-bl-sm'
+                }`}
             >
               <p className="text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap break-words">
                 {msg.content}
               </p>
-              <p className={`text-xs mt-1 sm:mt-2 ${
-                msg.role === 'user' ? 'text-indigo-200' : 'text-gray-500'
-              }`}>
+              <p className={`text-xs mt-1 sm:mt-2 ${msg.role === 'user' ? 'text-indigo-200' : 'text-gray-500'
+                }`}>
                 {new Date(msg.timestamp).toLocaleTimeString([], {
                   hour: '2-digit',
                   minute: '2-digit'
@@ -220,10 +218,10 @@ export default function ChatWidget() {
           aria-label="Open chat"
         >
           <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7" />
-          
+
           {/* Pulse effect */}
           <span className="absolute inset-0 rounded-full bg-indigo-400 animate-ping opacity-75"></span>
-          
+
           {/* Tooltip */}
           <span className="absolute bottom-full right-0 mb-2 px-3 py-1 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
             Chat with us!
