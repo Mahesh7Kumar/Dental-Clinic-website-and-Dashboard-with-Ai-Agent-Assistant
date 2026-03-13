@@ -1,0 +1,307 @@
+{
+  "name": "Website Connection Test",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.chatInput }}",
+        "options": {
+          "systemMessage": "=SYSTEM DATA — CRITICAL (DO NOT IGNORE)\n───────────────────────────────────────\nThe following JSON is the ONLY source of truth for consultation availability.\nThis data is provided dynamically by the workflow.\n\nYou MUST ONLY use this data.\nYou MUST NOT invent, guess, infer, modify, truncate, or reorder dates or time slots.\n\nAVAILABILITY_JSON:\n{{ JSON.stringify($json.availability) }}\n\nHAS_SLOTS:\n{{ $json.hasSlots }}\n\nMESSAGE:\n{{ $json.message }}\n\n───────────────────────────────────────\n⚠️ CRITICAL CHECK — EXECUTE FIRST\n───────────────────────────────────────\nBEFORE doing ANYTHING else, check:\n\nIF {{ $json.hasSlots }} is false\nOR AVAILABILITY_JSON is {} (empty object)\nOR AVAILABILITY_JSON has no keys\n\nTHEN respond with ONLY this message and STOP:\n\n\"Unfortunately, we currently have no available consultation slots online. 😔\n\nPlease contact DEMO DENTAL CENTER directly to book your appointment:\n\n📞 Phone: +91-123-456-7890\n🕒 Hours: Monday - Saturday, 9:00 AM - 6:00 PM\n\nWe apologize for the inconvenience and look forward to serving you!\"\n\nDO NOT proceed with booking steps.\nDO NOT show greeting.\nDO NOT ask any questions.\nSTOP immediately after this message.\n\n───────────────────────────────────────\nROLE DEFINITION (WHEN SLOTS AVAILABLE)\n───────────────────────────────────────\nYou are an AI Appointment Booking Agent for \"DEMO DENTAL CENTER\".\n\nYour ONLY responsibility is to guide patients through booking\na dental consultation appointment.\n\nYou must strictly follow the steps below in order.\nYou must NEVER skip steps.\nYou must NEVER assume missing information.\nYou must NEVER invent data.\n\n───────────────────────────────────────\nCONVERSATION STATE RULES\n───────────────────────────────────────\n- Maintain conversation state internally (date, time, name, phone, email)\n- Ask ONLY ONE question at a time\n- Do NOT repeat a question once valid input is received\n- Validate user input strictly\n- If input is invalid, re-ask ONLY that step\n- Respond ONLY in natural language\n- NEVER output JSON until the user explicitly confirms with YES\n\n───────────────────────────────────────\nSTEP 1 — GREETING (FIRST RESPONSE ONLY)\n───────────────────────────────────────\nOn the FIRST assistant response (when HAS_SLOTS is true), reply ONLY with:\n\n\"Thank you for contacting DEMO DENTAL CENTER! 🦷\n\nWe're here to help you schedule your dental consultation.\n\n📅 **Available Consultation Dates:**\n\n[List all dates from AVAILABILITY_JSON here]\n\nPlease select a date to see available time slots.\"\n\n───────────────────────────────────────\nSTEP 2 — SHOW AVAILABLE TIME SLOTS\n───────────────────────────────────────\nAfter a valid date is selected:\n\nDisplay ONLY the time slots for that selected date.\n\nExample:\n\"Available times for 2026-02-09:\n\n🕐 10:00\n🕐 10:30\n🕐 11:00\n🕐 11:30\n🕐 12:00\n\nWhich time works best for you?\"\n\nDo NOT show slots from other dates.\nWAIT for a valid time slot.\n\n───────────────────────────────────────\nSTEP 3 — PATIENT DETAILS\n───────────────────────────────────────\nAsk ONE question at a time:\n\n1. \"What's your full name?\"\n2. \"What's your phone number?\"\n3. \"What's your email address? (Type 'skip' if you don't want to provide)\"\n\n───────────────────────────────────────\nSTEP 4 — CONFIRMATION\n───────────────────────────────────────\nShow all details clearly:\n\n\"Please confirm your appointment details:\n\n📅 Date: [date]\n🕐 Time: [time]\n👤 Name: [name]\n📞 Phone: [phone]\n📧 Email: [email or 'Not provided']\n\nReply with YES to confirm or NO to cancel.\"\n\nWAIT for YES or NO.\n\n───────────────────────────────────────\nSTEP 5 — FINAL OUTPUT (YES ONLY)\n───────────────────────────────────────\nIf and ONLY if patient replies YES, output EXACTLY this format:\n\nBOOKING_CONFIRMED:\n{\n  \"name\": \"<patient_name>\",\n  \"phone\": \"<phone_number>\",\n  \"email\": \"<email_or_empty_string>\",\n  \"date\": \"<selected_date_YYYY-MM-DD>\",\n  \"time\": \"<selected_time_HH:MM>\"\n}\n\nIf patient replies NO:\n\"Your booking has been cancelled. Feel free to start over anytime!\"\n\n───────────────────────────────────────\nOFF-TOPIC HANDLING\n───────────────────────────────────────\nIf the user goes off-topic, reply:\n\n\"I can help you book a dental consultation appointment. Let's continue with your booking.\"\n\n───────────────────────────────────────\nVALIDATION RULES\n───────────────────────────────────────\n- Date MUST exist in AVAILABILITY_JSON keys\n- Time MUST exist in the array for the selected date\n- Phone must be valid (numbers with optional +, -, spaces, parentheses)\n- Email must contain @ or be \"skip\" (then use empty string)\n- Do NOT proceed without valid input for each step"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [560, -64],
+      "id": "06fe2e73-13e7-479a-b2d3-c4d9385029fb",
+      "name": "AI Agent",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [160, 160],
+      "id": "3d38e66f-1c12-453d-8ecc-76ea9a707e77",
+      "name": "Remove Duplicates",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the AI Agent's response\nconst aiResponse = $input.first().json.output;\n\n// Check if the response contains booking confirmation\nif (aiResponse && aiResponse.includes('BOOKING_CONFIRMED:')) {\n  try {\n    // Extract JSON from the response\n    const jsonMatch = aiResponse.match(/\\{[\\s\\S]*\\}/);\n    \n    if (jsonMatch) {\n      const bookingData = JSON.parse(jsonMatch[0]);\n      \n      // Return booking data with a confirmation flag\n      return [{\n        json: {\n          confirmed: true,\n          name: bookingData.name,\n          phone: bookingData.phone,\n          email: bookingData.email || '',\n          date: bookingData.date,\n          time: bookingData.time\n        }\n      }];\n    }\n  } catch (error) {\n    // If parsing fails, return not confirmed\n    return [{\n      json: {\n        confirmed: false,\n        message: 'Parsing error',\n        rawResponse: aiResponse\n      }\n    }];\n  }\n}\n\n// No confirmation found - still in conversation\nreturn [{\n  json: {\n    confirmed: false,\n    message: 'Conversation ongoing'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1072, -64],
+      "id": "932df4df-8b7b-49ee-90c6-c09dfa105923",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bdbc69e2-a58d-457d-a3b7-f2cb2c06e086",
+              "leftValue": "={{ $json.confirmed }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": "=",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [1280, -64],
+      "id": "f8b646a0-ecc5-4815-899e-3781d3486d56",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    d.id AS doctor_id,\n    d.name AS doctor_name,\n    ad.available_date,\n    ats.available_time\nFROM doctors d\nJOIN JSON_TABLE(\n    d.available_date,\n    '$[*]' COLUMNS (\n        available_date DATE PATH '$'\n    )\n) ad\nJOIN JSON_TABLE(\n    d.available_slots,\n    '$[*]' COLUMNS (\n        available_time TIME PATH '$'\n    )\n) ats\nLEFT JOIN appointments a\n    ON a.date = ad.available_date\n   AND a.time = ats.available_time\n   AND a.status NOT IN ('cancelled')\nWHERE \n    a.id IS NULL\n    AND ad.available_date >= CURRENT_DATE\nORDER BY ad.available_date, ats.available_time;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [-128, 160],
+      "id": "0b565bb5-28ac-499b-9766-c65ca93b0402",
+      "name": "Get availablity",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [336, -64],
+      "id": "d21f4d5c-c3cd-4190-af63-54e83c578187",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "table": {
+          "__rl": true,
+          "value": "appointments",
+          "mode": "list",
+          "cachedResultName": "appointments"
+        },
+        "dataMode": "defineBelow",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "patient_name",
+              "value": "={{ $json.name }}"
+            },
+            {
+              "column": "patient_phone",
+              "value": "={{ $json.phone }}"
+            },
+            {
+              "column": "patient_email",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "column": "date",
+              "value": "={{ $json.date }}"
+            },
+            {
+              "column": "time",
+              "value": "={{ $json.time }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [992, 160],
+      "id": "539d00f0-673c-42b2-b3ef-2797ade8970c",
+      "name": "Insert rows in a table"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.sessionId }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [656, 160],
+      "id": "e1fbf4d2-dccc-451e-b9d0-14530f7cd672",
+      "name": "Memory"
+    },
+    {
+      "parameters": {
+        "model": "meta-llama/llama-3-8b-instruct",
+        "options": {
+          "responseFormat": "text"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [480, 160],
+      "id": "1c2e38f6-7e93-4d41-affb-feb709f7771a",
+      "name": "Ai model"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Check if items array is empty or contains only empty objects\nif (!items || items.length === 0) {\n  return [\n    {\n      json: {\n        message: \"No slots are available at the moment.\",\n        availability: {},\n        hasSlots: false\n      }\n    }\n  ];\n}\n\n// Check if first item has no data (empty object)\nif (!items[0].json.available_date || !items[0].json.available_time) {\n  return [\n    {\n      json: {\n        message: \"No slots are available at the moment.\",\n        availability: {},\n        hasSlots: false\n      }\n    }\n  ];\n}\n\nconst availability = {};\n\nfor (const item of items) {\n  // Skip items with missing data\n  if (!item.json.available_date || !item.json.available_time) {\n    continue;\n  }\n  \n  const date = item.json.available_date;\n  const time = item.json.available_time.slice(0, 5); // HH:mm\n  \n  if (!availability[date]) {\n    availability[date] = [];\n  }\n  if (!availability[date].includes(time)) {\n    availability[date].push(time);\n  }\n}\n\n// Sort times for each date\nfor (const date in availability) {\n  availability[date].sort();\n}\n\n// Check if availability object is still empty after processing\nif (Object.keys(availability).length === 0) {\n  return [\n    {\n      json: {\n        message: \"No slots are available at the moment.\",\n        availability: {},\n        hasSlots: false\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      message: \"Available slots found\",\n      availability: availability,\n      hasSlots: true\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [16, 160],
+      "id": "1d6f5dc8-8e8d-43f8-a5ee-92b38e647bd6",
+      "name": "data Formate"
+    },
+    {
+      "parameters": {
+        "content": "## Doctor Appointment Booking System\n*Connected to the Databased insert the booked\nappointment in the databasd.",
+        "height": 624,
+        "width": 1744,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-224, -240],
+      "typeVersion": 1,
+      "id": "4fa315bf-93fb-4ae0-96d8-1e5ee66dfb53",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"output\": $json.output } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [848, -144],
+      "id": "d2de3965-f95d-453c-8944-86203cbdf421",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "doctor-chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-48, -80],
+      "id": "b05e37d4-c6ac-4d26-835d-563dd823114b",
+      "name": "Webhook",
+      "webhookId": "f4c2484a-b4fe-4d8b-bf2f-13e73ebfc81c"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"output\": \"Appointment Booked  Successfully\" } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [1200, 160],
+      "id": "234822c0-ae3e-47ee-aa7e-07c52cc0362f",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          { "node": "Respond to Webhook", "type": "main", "index": 0 },
+          { "node": "Code in JavaScript", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [{ "node": "Merge", "type": "main", "index": 1 }]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [{ "node": "If", "type": "main", "index": 0 }]
+      ]
+    },
+    "If": {
+      "main": [
+        [{ "node": "Insert rows in a table", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get availablity": {
+      "main": [
+        [{ "node": "data Formate", "type": "main", "index": 0 }]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [{ "node": "AI Agent", "type": "main", "index": 0 }]
+      ]
+    },
+    "Insert rows in a table": {
+      "main": [
+        [{ "node": "Respond to Webhook1", "type": "main", "index": 0 }]
+      ]
+    },
+    "Memory": {
+      "ai_memory": [
+        [{ "node": "AI Agent", "type": "ai_memory", "index": 0 }]
+      ]
+    },
+    "Ai model": {
+      "ai_languageModel": [
+        [{ "node": "AI Agent", "type": "ai_languageModel", "index": 0 }]
+      ]
+    },
+    "data Formate": {
+      "main": [
+        [{ "node": "Remove Duplicates", "type": "main", "index": 0 }]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [[]]
+    },
+    "Webhook": {
+      "main": [
+        [
+          { "node": "Merge", "type": "main", "index": 0 },
+          { "node": "Get availablity", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b07e0237-2558-472f-9539-ba20cffdc8bf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "85ff9ddbf65c7015f1a88bcb4feb4c4fb2691f35d0b7e5339646b0c456907242"
+  },
+  "id": "1IgwJiN0Pwfq9Ccs",
+  "tags": []
+}
