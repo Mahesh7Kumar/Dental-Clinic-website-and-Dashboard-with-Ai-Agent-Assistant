@@ -284,6 +284,7 @@ const DoctorModel = {
         return { id: result.insertId, ...data };
     },
 
+
     // ── REMINDER SYSTEM ─────────────────────────────────────────────
 
     /**
@@ -318,7 +319,6 @@ const DoctorModel = {
             [id]
         );
     },
-
 };
 
 export default DoctorModel;
